@@ -12,10 +12,10 @@ import {
   useTheme,
   type ServiceDefinition,
 } from "@babylonjs/inspector";
-import { type FunctionComponent } from "react";
-import { Info16Regular, InfoRegular } from "@fluentui/react-icons";
+import { type FunctionComponent, useEffect, useState } from "react";
+import { AppsAddInRegular, Info16Regular, InfoRegular } from "@fluentui/react-icons";
 import { serviceList } from "./ServiceList";
-import { Tooltip } from "@fluentui/react-components";
+import { Badge, Tooltip } from "@fluentui/react-components";
 import { extensionMetadata } from "./ExtensionList";
 
 const teachingMomentKeyByName: Record<string, string> = {
@@ -30,6 +30,22 @@ const teachingMomentKeyByName: Record<string, string> = {
 
 const serviceDescriptionByName: Record<string, string> = {
   "Reflection Probes": "Manage probe render lists and inspect which meshes and materials are linked to each reflection probe. SCENE EXPLORER Section",
+};
+
+const getInstalledExtensionIds = (): Set<string> => {
+  if (typeof window === "undefined") {
+    return new Set();
+  }
+
+  try {
+    const installedExtensions = JSON.parse(
+      window.localStorage.getItem("Babylon/Inspector/Extensions/InstalledExtensions") ?? "[]"
+    ) as string[];
+
+    return new Set(installedExtensions);
+  } catch {
+    return new Set();
+  }
 };
 
 export const InfoServiceDefinition: ServiceDefinition<
@@ -76,6 +92,31 @@ export const InfoServiceDefinition: ServiceDefinition<
 
     const Info: FunctionComponent<{ scene: Scene }> = ({ scene: _scene }) => {
       const theme = useTheme();
+      const [installedExtensions, setInstalledExtensions] = useState<Record<string, boolean>>({});
+
+      useEffect(() => {
+        const syncInstalledState = () => {
+          const installedExtensionIds = getInstalledExtensionIds();
+
+          setInstalledExtensions(
+            Object.fromEntries(
+              extensionMetadata.map((extension) => [
+                extension.name,
+                installedExtensionIds.has(`${extension.feedName}/${extension.name}`),
+              ])
+            )
+          );
+        };
+
+        syncInstalledState();
+
+        const interval = window.setInterval(syncInstalledState, 1000);
+
+        return () => {
+          window.clearInterval(interval);
+        };
+      }, []);
+
       const rowStyle = {
         padding: "6px 10px",
         display: "flex",
@@ -110,11 +151,20 @@ export const InfoServiceDefinition: ServiceDefinition<
             {extensionMetadata.map((extension, index) => (
               <li key={index} style={rowStyle}>
                 <span style={{ color: theme.colorNeutralForeground1 }}>{extension.name}</span>
-                <TeachingInfoIcon
-                  name={extension.name}
-                  description={extension.description}
-                  color={theme.colorNeutralForeground3}
-                />
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                  <Badge
+                    size="small"
+                    appearance="outline"
+                    color={installedExtensions[extension.name] ? "success" : "danger"}
+                  >
+                    {installedExtensions[extension.name] ? "Installed" : "Not installed"}
+                  </Badge>
+                  <TeachingInfoIcon
+                    name={extension.name}
+                    description={extension.description}
+                    color={theme.colorNeutralForeground3}
+                  />
+                </div>
               </li>
             ))}
           </ul>
@@ -131,6 +181,17 @@ export const InfoServiceDefinition: ServiceDefinition<
                 );
               }}
             />
+          </div>
+          <div
+            style={{
+              ...rowStyle,
+              marginTop: "6px",
+              color: theme.colorNeutralForeground2,
+              justifyContent: "flex-start",
+            }}
+          >
+            <span>To install/uninstall an extension open Manage Extensions pane</span>
+            <AppsAddInRegular style={{ width: "16px", height: "16px", flexShrink: 0 }} />
           </div>
         </div>
       );

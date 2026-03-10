@@ -59,6 +59,7 @@ const getExtensionList  = (extensions) => {
 // BuiltInsExtensionFeed has the feed descriptions private. This function populates the new object to use in InfoService.
 const getExtensionMetadata = (extensions) => {
   return extensions.map(extension => ({
+    feedName: extension.name,
     name: extension.name,
     description: extension.description
   }));

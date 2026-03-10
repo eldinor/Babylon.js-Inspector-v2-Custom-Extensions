@@ -183,7 +183,7 @@ export const DrawCallsServiceDefinition: ServiceDefinition<
    
     const toolbarItemRegistration = shellService.addToolbarItem({
       key: "Draw Calls Counter",
-      order: -100,
+      order: 2000,
       horizontalLocation: "right",
       verticalLocation: "bottom",
       teachingMoment: {
