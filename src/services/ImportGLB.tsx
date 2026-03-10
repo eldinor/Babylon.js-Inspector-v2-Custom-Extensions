@@ -34,9 +34,9 @@ import type { Scene } from "@babylonjs/core/scene";
 import type { AssetContainer } from "@babylonjs/core/assetContainer";
 import type { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
-import {  LoadAssetContainerAsync } from "@babylonjs/core/Loading/sceneLoader";
+import { LoadAssetContainerAsync } from "@babylonjs/core/Loading/sceneLoader";
 import { Logger } from "@babylonjs/core/Misc/logger";
-import { FileUploadLine,  type ISelectionService,} from "@babylonjs/inspector";
+import { FileUploadLine, type ISelectionService } from "@babylonjs/inspector";
 import { Delete16Regular, Copy16Regular, DocumentCopy16Regular } from "@fluentui/react-icons";
 import { Button, Tooltip, Switch } from "@fluentui/react-components";
 
@@ -54,7 +54,41 @@ interface LoadedFile {
   clones: CloneInstance[];
 }
 
-export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService: ISelectionService }> = ({ scene, selectionService }) => {
+function syncRootTransform(target: TransformNode, source: TransformNode | AbstractMesh | null | undefined) {
+  if (!source) {
+    return;
+  }
+
+  target.position.copyFrom(source.position);
+  target.scaling.copyFrom(source.scaling);
+
+  if (source.rotationQuaternion) {
+    target.rotationQuaternion = source.rotationQuaternion.clone();
+  } else {
+    target.rotationQuaternion = null;
+    target.rotation.copyFrom(source.rotation);
+  }
+}
+
+function MeshIcon() {
+  return (
+    <svg
+      fill="currentColor"
+      aria-hidden="true"
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M14.03,3.54l-5.11-2.07c-.61-.25-1.27-.25-1.88,0L1.93,3.54c-.57.23-.94.78-.94,1.39v6.15c0,.61.37,1.16.94,1.39l5.11,2.07c.3.12.62.18.94.18s.64-.06.94-.18l5.12-2.07c.57-.23.94-.78.94-1.39v-6.15c0-.61-.37-1.16-.94-1.39ZM13.97,7.71l-2.11.86v-2.71l2.11-.86v2.71ZM1.99,5l2.11.86v2.71l-2.11-.86v-2.71ZM11.35,4.98l-2.04-.83,1.78-.72,2.04.83-1.78.72ZM10.02,5.52l-2.04.83-2.04-.83,2.04-.83,2.04.83ZM4.6,4.98l-1.78-.72,2.04-.83,1.78.72-2.04.83ZM5.1,6.26l2.38.96v2.71l-2.38-.96v-2.71ZM8.48,7.22l2.38-.96v2.71l-2.38.96v-2.71ZM7.41,2.39c.18-.07.37-.11.56-.11s.38.04.56.11l1.22.49-1.78.72-1.79-.72,1.22-.49ZM1.99,11.07v-2.29l2.11.86v2.62l-1.8-.73c-.19-.08-.31-.26-.31-.46ZM5.1,12.67v-2.62l2.38.96v2.61s-.04,0-.06-.01l-2.31-.94ZM8.54,13.61s-.04,0-.06.01v-2.61l2.38-.96v2.62l-2.31.94ZM13.66,11.54l-1.8.73v-2.62l2.11-.86v2.29c0,.2-.12.39-.31.46Z" />
+    </svg>
+  );
+}
+
+export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService: ISelectionService }> = ({
+  scene,
+  selectionService,
+}) => {
   const [loadedFiles, setLoadedFiles] = useState<LoadedFile[]>([]);
 
   // Load auto-select setting from localStorage, default to true
@@ -131,10 +165,10 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
       // Load the GLB file
       Logger.Log(`Loading GLB file: ${file.name}`);
 
-     const container = await LoadAssetContainerAsync(fileURL, scene, { pluginExtension: ".glb" });
-     const meshName = file.name.substring(0, file.name.lastIndexOf("."));
-     container.meshes[0].name = meshName;
-     container.addAllToScene()
+      const container = await LoadAssetContainerAsync(fileURL, scene, { pluginExtension: ".glb" });
+      const meshName = file.name.substring(0, file.name.lastIndexOf("."));
+      container.meshes[0].name = meshName;
+      container.addAllToScene();
 
       Logger.Log(`Successfully loaded ${file.name}`);
 
@@ -198,14 +232,16 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
 
   const handleClone = (index: number) => {
     const file = loadedFiles[index];
+    const sourceRoot = (file.container.rootNodes[0] as TransformNode | null | undefined) ?? file.container.meshes[0];
 
     // Clone using instantiateModelsToScene with doNotInstantiate: true
     const result = file.container.instantiateModelsToScene(undefined, false, { doNotInstantiate: true });
 
     if (result.rootNodes.length > 0) {
       const rootNode = result.rootNodes[0] as TransformNode;
-      const cloneName = `${file.meshName}_clone_${file.clones.filter(c => c.type === "clone").length + 1}`;
+      const cloneName = `${file.meshName}_clone_${file.clones.filter((c) => c.type === "clone").length + 1}`;
       rootNode.name = cloneName;
+      syncRootTransform(rootNode, sourceRoot);
 
       // Add to clones list
       setLoadedFiles((prev) => {
@@ -224,14 +260,16 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
 
   const handleInstance = (index: number) => {
     const file = loadedFiles[index];
+    const sourceRoot = (file.container.rootNodes[0] as TransformNode | null | undefined) ?? file.container.meshes[0];
 
     // Instance using instantiateModelsToScene with doNotInstantiate: false
     const result = file.container.instantiateModelsToScene(undefined, false, { doNotInstantiate: false });
 
     if (result.rootNodes.length > 0) {
       const rootNode = result.rootNodes[0] as TransformNode;
-      const instanceName = `${file.meshName}_instance_${file.clones.filter(c => c.type === "instance").length + 1}`;
+      const instanceName = `${file.meshName}_instance_${file.clones.filter((c) => c.type === "instance").length + 1}`;
       rootNode.name = instanceName;
+      syncRootTransform(rootNode, sourceRoot);
 
       // Add to clones list
       setLoadedFiles((prev) => {
@@ -272,13 +310,17 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
                       onClick={handleClick}
                       style={{
                         cursor: "pointer",
-                        textDecoration: "underline"
+                        textDecoration: "underline",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
                       }}
                     >
-                      • {file.name}
+                      <MeshIcon />
+                      {file.name}
                     </span>
                     <span style={{ fontSize: "11px", color: "#888", marginLeft: "12px" }}>
-                      {((file.size/1024)/1024).toFixed(2)+"MB"}
+                      {((file.size / 1024) / 1024).toFixed(2) + "MB"}
                     </span>
                     {file.clones.length > 0 && (
                       <div style={{ marginLeft: "12px", marginTop: "4px" }}>
@@ -302,10 +344,14 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
                                 style={{
                                   cursor: "pointer",
                                   color: clone.type === "clone" ? "#8B7355" : "#13a10e",
-                                  textDecoration: "underline"
+                                  textDecoration: "underline",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                ↳ {clone.name}
+                                {clone.type === "clone" ? <Copy16Regular /> : <DocumentCopy16Regular />}
+                                {clone.name}
                               </span>
                               <Tooltip content="Delete" relationship="label">
                                 <Delete16Regular
@@ -326,7 +372,7 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
                         style={{
                           cursor: "pointer",
                           color: "#8B7355",
-                          flexShrink: 0
+                          flexShrink: 0,
                         }}
                       />
                     </Tooltip>
@@ -336,7 +382,7 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
                         style={{
                           cursor: "pointer",
                           color: "#13a10e",
-                          flexShrink: 0
+                          flexShrink: 0,
                         }}
                       />
                     </Tooltip>
@@ -346,7 +392,7 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
                         style={{
                           cursor: "pointer",
                           color: "#d13438",
-                          flexShrink: 0
+                          flexShrink: 0,
                         }}
                       />
                     </Tooltip>
@@ -355,11 +401,7 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
               );
             })}
           </ul>
-          <Button
-            appearance="secondary"
-            onClick={handleDisposeAll}
-            style={{ marginTop: "8px", width: "100%" }}
-          >
+          <Button appearance="secondary" onClick={handleDisposeAll} style={{ marginTop: "8px", width: "100%" }}>
             Dispose All
           </Button>
           <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
