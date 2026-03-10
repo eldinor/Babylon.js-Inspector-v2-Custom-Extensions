@@ -127,11 +127,9 @@ export function Canvas() {
     // Defer Inspector update to avoid race condition during render
     setTimeout(() => {
       ShowInspector(sceneRef.current!, {
-        embedMode: false,
         //  initialTab: 2,
         //   showExplorer:false,
-        enableClose: true,
-        overlay: true,
+        layoutMode: "overlay",
         serviceDefinitions: enabledServices,
         extensionFeeds: extensionList,
       });

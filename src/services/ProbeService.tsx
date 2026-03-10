@@ -15,7 +15,6 @@ import {
   ISelectionService,
   SelectionServiceIdentity,
   Button,
-  LineContainer,
   Link,
   LinkToEntityPropertyLine,
   MessageBar,
@@ -69,7 +68,7 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
       onAction: () => void;
       children?: React.ReactNode;
     }) => (
-      <LineContainer
+      <div
         style={{
           display: "flex",
           flexDirection: "column",
@@ -95,7 +94,7 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
           </div>
         </div>
         {children}
-      </LineContainer>
+      </div>
     );
 
     // Store wrapped probe entities to maintain reference equality
@@ -242,7 +241,7 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
             };
 
             return (
-              <LineContainer style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 <SearchBar onChange={setQuery} placeholder="Filter meshes" />
                 {availableMeshes.length === 0 ? (
                   <EmptyState message="No available meshes to add." />
@@ -258,7 +257,7 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
                     />
                   ))
                 )}
-              </LineContainer>
+              </div>
             );
           },
         },
@@ -308,7 +307,7 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
                       onAction={() => handleRemoveMaterial(material)}
                     >
                       {boundMeshes.length > 0 ? (
-                        <LineContainer style={{ marginLeft: "16px" }}>
+                        <div style={{ marginLeft: "16px" }}>
                           {boundMeshes.map((mesh, meshIndex) => (
                             <Link
                               key={mesh.uniqueId ?? meshIndex}
@@ -318,7 +317,7 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
                               }}
                             />
                           ))}
-                        </LineContainer>
+                        </div>
                       ) : null}
                     </EntityActionRow>
                   );
@@ -387,7 +386,7 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
             };
 
             return (
-              <LineContainer style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 <SearchBar onChange={setQuery} placeholder="Filter materials" />
                 {availableMaterials.length === 0 ? (
                   <EmptyState message="No available materials to add." />
@@ -406,7 +405,7 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
                         onAction={() => handleAddMaterial(material)}
                       >
                         {boundMeshes.length > 0 ? (
-                          <LineContainer style={{ marginLeft: "16px" }}>
+                          <div style={{ marginLeft: "16px" }}>
                             {boundMeshes.map((mesh, meshIndex) => (
                               <Link
                                 key={mesh.uniqueId ?? meshIndex}
@@ -416,13 +415,13 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
                                 }}
                               />
                             ))}
-                          </LineContainer>
+                          </div>
                         ) : null}
                       </EntityActionRow>
                     );
                   })
                 )}
-              </LineContainer>
+              </div>
             );
           },
         },

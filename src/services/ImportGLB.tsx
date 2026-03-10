@@ -36,7 +36,7 @@ import type { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 import { LoadAssetContainerAsync } from "@babylonjs/core/Loading/sceneLoader";
 import { Logger } from "@babylonjs/core/Misc/logger";
-import { FileUploadLine, type ISelectionService } from "@babylonjs/inspector";
+import { FileUploadLine, type ISelectionService, useTheme } from "@babylonjs/inspector";
 import { Delete16Regular, Copy16Regular, DocumentCopy16Regular } from "@fluentui/react-icons";
 import { Button, Tooltip, Switch } from "@fluentui/react-components";
 
@@ -89,6 +89,7 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
   scene,
   selectionService,
 }) => {
+  const theme = useTheme();
   const [loadedFiles, setLoadedFiles] = useState<LoadedFile[]>([]);
 
   // Load auto-select setting from localStorage, default to true
@@ -287,13 +288,13 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "12px", padding: "8px 12px 12px" }}>
       <FileUploadLine label="Load GLB File" accept=".glb" onClick={(files: FileList) => loadGLB(files)} />
 
       {loadedFiles.length > 0 && (
-        <div style={{ marginTop: "8px" }}>
-          <h4 style={{ margin: 0, marginBottom: "4px", fontSize: "14px", fontWeight: 600 }}>Loaded Files:</h4>
-          <ul style={{ listStyleType: "none", paddingLeft: 0, margin: 0, marginTop: "4px" }}>
+        <div style={{ marginTop: "4px" }}>
+          <h4 style={{ margin: 0, marginBottom: "8px", fontSize: "14px", fontWeight: 600 }}>Loaded Files:</h4>
+          <ul style={{ listStyleType: "none", paddingLeft: 0, margin: 0, marginTop: "6px" }}>
             {loadedFiles.map((file, index) => {
               const handleClick = () => {
                 const mesh = scene.getMeshByName(file.meshName);
@@ -304,7 +305,16 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
               };
 
               return (
-                <li key={index} style={{ padding: "4px 0", fontSize: "12px", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <li
+                  key={index}
+                  style={{
+                    padding: "8px 0",
+                    fontSize: "12px",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "10px",
+                  }}
+                >
                   <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
                     <span
                       onClick={handleClick}
@@ -313,17 +323,23 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
                         textDecoration: "underline",
                         display: "inline-flex",
                         alignItems: "center",
-                        gap: "6px",
+                        gap: "8px",
                       }}
                     >
                       <MeshIcon />
                       {file.name}
                     </span>
-                    <span style={{ fontSize: "11px", color: "#888", marginLeft: "12px" }}>
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        color: theme.colorNeutralForeground3,
+                        marginLeft: "24px",
+                      }}
+                    >
                       {((file.size / 1024) / 1024).toFixed(2) + "MB"}
                     </span>
                     {file.clones.length > 0 && (
-                      <div style={{ marginLeft: "12px", marginTop: "4px" }}>
+                      <div style={{ marginLeft: "24px", marginTop: "8px" }}>
                         {file.clones.map((clone, cloneIndex) => {
                           const handleCloneClick = () => {
                             selectionService.selectedEntity = clone.rootNode;
@@ -338,16 +354,25 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
                           };
 
                           return (
-                            <div key={cloneIndex} style={{ fontSize: "11px", marginTop: "2px", display: "flex", alignItems: "center", gap: "4px" }}>
+                            <div
+                              key={cloneIndex}
+                              style={{
+                                fontSize: "11px",
+                                marginTop: "6px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                              }}
+                            >
                               <span
                                 onClick={handleCloneClick}
                                 style={{
                                   cursor: "pointer",
-                                  color: clone.type === "clone" ? "#8B7355" : "#13a10e",
+                                  color: theme.colorNeutralForeground1,
                                   textDecoration: "underline",
                                   display: "inline-flex",
                                   alignItems: "center",
-                                  gap: "4px",
+                                   gap: "6px",
                                 }}
                               >
                                 {clone.type === "clone" ? <Copy16Regular /> : <DocumentCopy16Regular />}
@@ -356,7 +381,7 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
                               <Tooltip content="Delete" relationship="label">
                                 <Delete16Regular
                                   onClick={handleCloneDispose}
-                                  style={{ cursor: "pointer", color: "#d13438" }}
+                                  style={{ cursor: "pointer", color: theme.colorStatusDangerForeground1 }}
                                 />
                               </Tooltip>
                             </div>
@@ -365,13 +390,13 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
                       </div>
                     )}
                   </div>
-                  <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center", paddingTop: "2px" }}>
                     <Tooltip content="Clone" relationship="label">
                       <Copy16Regular
                         onClick={() => handleClone(index)}
                         style={{
                           cursor: "pointer",
-                          color: "#8B7355",
+                          color: theme.colorNeutralForeground1,
                           flexShrink: 0,
                         }}
                       />
@@ -381,7 +406,7 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
                         onClick={() => handleInstance(index)}
                         style={{
                           cursor: "pointer",
-                          color: "#13a10e",
+                          color: theme.colorNeutralForeground1,
                           flexShrink: 0,
                         }}
                       />
@@ -391,7 +416,7 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
                         onClick={() => handleDelete(index)}
                         style={{
                           cursor: "pointer",
-                          color: "#d13438",
+                          color: theme.colorStatusDangerForeground1,
                           flexShrink: 0,
                         }}
                       />
@@ -401,10 +426,10 @@ export const ImportGLBTools: FunctionComponent<{ scene: Scene; selectionService:
               );
             })}
           </ul>
-          <Button appearance="secondary" onClick={handleDisposeAll} style={{ marginTop: "8px", width: "100%" }}>
+          <Button appearance="secondary" onClick={handleDisposeAll} style={{ marginTop: "12px", width: "100%" }}>
             Dispose All
           </Button>
-          <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ marginTop: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
             <Switch
               checked={autoSelectModel}
               onChange={(e) => setAutoSelectModel(e.currentTarget.checked)}

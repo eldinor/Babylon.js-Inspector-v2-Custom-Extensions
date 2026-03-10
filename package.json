@@ -1,7 +1,7 @@
 {
   "name": "react18",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,12 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@babylonjs/addons": "8.35.0",
-    "@babylonjs/core": "8.35.0",
-    "@babylonjs/inspector": "8.35.0-preview",
-    "@babylonjs/loaders": "8.35.0",
-    "@babylonjs/materials": "^8.35.0",
-    "@babylonjs/serializers": "8.35.0",
+    "@babylonjs/addons": "8.54.1",
+    "@babylonjs/core": "8.54.1",
+    "@babylonjs/inspector": "8.54.1",
+    "@babylonjs/loaders": "8.54.1",
+    "@babylonjs/materials": "8.54.1",
+    "@babylonjs/serializers": "8.54.1",
     "@fluentui/react-icons": "^2.0.313",
     "echarts-for-react": "3.0.2",
     "loader-utils": "3.2.1",

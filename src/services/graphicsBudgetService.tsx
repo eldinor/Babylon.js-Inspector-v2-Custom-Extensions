@@ -163,6 +163,7 @@ export const DrawCallsServiceDefinition: ServiceDefinition<
 
       return (
         <Badge
+          title="Draw Calls"
           style={{ alignSelf: "center" }}
           size="medium"
           appearance="filled"
@@ -182,8 +183,13 @@ export const DrawCallsServiceDefinition: ServiceDefinition<
    
     const toolbarItemRegistration = shellService.addToolbarItem({
       key: "Draw Calls Counter",
+      order: -100,
       horizontalLocation: "right",
       verticalLocation: "bottom",
+      teachingMoment: {
+        title: "Draw Calls",
+        description: "This footer indicator shows the current scene draw-call count and changes color at warning thresholds.",
+      },
       // This is the React component that will be rendered in the side pane.
       component: () => {
         // Create a scene state that updates whenever the current scene updates.

@@ -97,6 +97,10 @@ export const VertexTreeMapServiceDefinition: ServiceDefinition<[], [IShellServic
         icon: DataTreemapRegular,
         horizontalLocation: "right",
         verticalLocation: "top",
+        teachingMoment: {
+          title: "Vertex Tree Map",
+          description: "Analyze mesh vertex cost visually and click a block to select the mesh in the scene.",
+        },
         content: () => {
           const scene = useObservableState(() => sceneContext.currentScene, sceneContext.currentSceneObservable);
 

@@ -21,7 +21,7 @@ const graphicsBudgetExtension = {
 
 const importGLBExtension = {
   name: "Import GLB",
-  description: "Provides a tool to import GLB files into the scene and then clone, instance and manipulate them.",
+  description: "Provides a tool to import GLB files into the scene and then clone, instance and manipulate them. TOOLS Section",
   keywords: ["import", "glb", "tools"],
   ...BabylonPressResources,
   getExtensionModuleAsync: async () => import("../services/ImportGLBService"),
@@ -29,7 +29,7 @@ const importGLBExtension = {
 
 const disposeByTypeExtension = {
   name: "Dispose By Type [Experimental]",
-  description: "Provides a tool to dispose scene objects by type (lights, meshes, materials, textures, etc.) with batch selection.",
+  description: "Provides a tool to dispose scene objects by type (lights, meshes, materials, textures, etc.) with batch selection. SCENE EXPLORER Section",
   keywords: ["dispose", "cleanup", "tools", "batch"],
   ...BabylonPressResources,
   getExtensionModuleAsync: async () => import("../services/DisposeByTypeService"),

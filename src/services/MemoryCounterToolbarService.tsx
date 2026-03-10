@@ -78,6 +78,10 @@ const MemoryCounterServiceDefinition: ServiceDefinition<
       key: "Memory Counter",
       horizontalLocation: "left",
       verticalLocation: "bottom",
+      teachingMoment: {
+        title: "Memory Counter",
+        description: "This footer indicator shows approximate JavaScript heap usage for the current Inspector session.",
+      },
       // This is the React component that will be rendered in the toolbar.
       component: MemoryCounterContainer,
     });

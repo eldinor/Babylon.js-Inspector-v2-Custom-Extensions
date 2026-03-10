@@ -36,6 +36,10 @@ export const LogoServiceDefinition: ServiceDefinition<[], [IShellService]> = {
       key: "BabylonPress Logo",
       horizontalLocation: "right",
       verticalLocation: "bottom",
+      teachingMoment: {
+        title: "BabylonPress",
+        description: "Open BabylonPress resources and project links from this footer shortcut.",
+      },
       component: Logo,
     });
 

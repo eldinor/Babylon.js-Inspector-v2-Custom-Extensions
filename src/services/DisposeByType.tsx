@@ -21,7 +21,7 @@
  */
 
 import { Scene } from "@babylonjs/core";
-import { ISelectionService } from "@babylonjs/inspector";
+import { ISelectionService, MessageBar, useTheme } from "@babylonjs/inspector";
 import { useState, useEffect } from "react";
 import { Button, Checkbox, Badge } from "@fluentui/react-components";
 
@@ -59,6 +59,7 @@ interface CheckedState {
 }
 
 export function DisposeByTypeTools({ scene }: DisposeByTypeToolsProps) {
+  const theme = useTheme();
   const [counts, setCounts] = useState<TypeCounts>({
     lights: 0,
     transformNodes: 0,
@@ -89,6 +90,21 @@ export function DisposeByTypeTools({ scene }: DisposeByTypeToolsProps) {
 
   const [invertSelection, setInvertSelection] = useState<boolean>(false);
   const [disposalMessage, setDisposalMessage] = useState<string>("");
+
+  const labelRowStyle = {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    flexWrap: "wrap" as const,
+    minHeight: "24px",
+  };
+
+  const panelStyle = {
+    padding: "8px 12px 12px",
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "10px",
+  };
 
   // Update counts when scene changes
   useEffect(() => {
@@ -292,21 +308,23 @@ export function DisposeByTypeTools({ scene }: DisposeByTypeToolsProps) {
   };
 
   return (
-    <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
-      <h3 style={{ margin: "0 0 8px 0", fontSize: "14px", fontWeight: "600" }}>Dispose By Type</h3>
+    <div style={panelStyle}>
+      <h3 style={{ margin: "0 0 4px 0", fontSize: "14px", fontWeight: "600", color: theme.colorNeutralForeground1 }}>
+        Dispose By Type
+      </h3>
 
       <Checkbox
         checked={invertSelection}
         onChange={(_, data) => handleInvertSelection(data.checked as boolean)}
         label="Invert Selection"
-        style={{ fontWeight: "600", marginBottom: "4px" }}
+        style={{ fontWeight: "600", marginBottom: "2px" }}
       />
 
       <Checkbox
         checked={checked.lights}
         onChange={(_, data) => handleCheckboxChange("lights", data.checked as boolean)}
         label={
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={labelRowStyle}>
             Lights
             <Badge size="small" appearance="tint" color="informative">{counts.lights}</Badge>
           </div>
@@ -317,7 +335,7 @@ export function DisposeByTypeTools({ scene }: DisposeByTypeToolsProps) {
         checked={checked.transformNodes}
         onChange={(_, data) => handleCheckboxChange("transformNodes", data.checked as boolean)}
         label={
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={labelRowStyle}>
             Transform Nodes
             <Badge size="small" appearance="tint" color="informative">{counts.transformNodes}</Badge>
           </div>
@@ -328,7 +346,7 @@ export function DisposeByTypeTools({ scene }: DisposeByTypeToolsProps) {
         checked={checked.meshes}
         onChange={(_, data) => handleCheckboxChange("meshes", data.checked as boolean)}
         label={
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={labelRowStyle}>
             Meshes
             <Badge size="small" appearance="tint" color="informative">{counts.meshes}</Badge>
           </div>
@@ -339,7 +357,7 @@ export function DisposeByTypeTools({ scene }: DisposeByTypeToolsProps) {
         checked={checked.skeletons}
         onChange={(_, data) => handleCheckboxChange("skeletons", data.checked as boolean)}
         label={
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={labelRowStyle}>
             Skeletons
             <Badge size="small" appearance="tint" color="informative">{counts.skeletons}</Badge>
           </div>
@@ -350,7 +368,7 @@ export function DisposeByTypeTools({ scene }: DisposeByTypeToolsProps) {
         checked={checked.materials}
         onChange={(_, data) => handleCheckboxChange("materials", data.checked as boolean)}
         label={
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={labelRowStyle}>
             Materials
             <Badge size="small" appearance="tint" color="informative">{counts.materials}</Badge>
             {counts.materialsNonDisposable > 0 && (
@@ -364,7 +382,7 @@ export function DisposeByTypeTools({ scene }: DisposeByTypeToolsProps) {
         checked={checked.textures}
         onChange={(_, data) => handleCheckboxChange("textures", data.checked as boolean)}
         label={
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={labelRowStyle}>
             Textures
             <Badge size="small" appearance="tint" color="informative">{counts.textures}</Badge>
             {counts.texturesNonDisposable > 0 && (
@@ -378,7 +396,7 @@ export function DisposeByTypeTools({ scene }: DisposeByTypeToolsProps) {
         checked={checked.animationGroups}
         onChange={(_, data) => handleCheckboxChange("animationGroups", data.checked as boolean)}
         label={
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={labelRowStyle}>
             Animation Groups
             <Badge size="small" appearance="tint" color="informative">{counts.animationGroups}</Badge>
           </div>
@@ -389,7 +407,7 @@ export function DisposeByTypeTools({ scene }: DisposeByTypeToolsProps) {
         checked={checked.postProcesses}
         onChange={(_, data) => handleCheckboxChange("postProcesses", data.checked as boolean)}
         label={
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={labelRowStyle}>
             Post Processes
             <Badge size="small" appearance="tint" color="informative">{counts.postProcesses}</Badge>
           </div>
@@ -400,7 +418,7 @@ export function DisposeByTypeTools({ scene }: DisposeByTypeToolsProps) {
         checked={checked.effectLayers}
         onChange={(_, data) => handleCheckboxChange("effectLayers", data.checked as boolean)}
         label={
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={labelRowStyle}>
             Effect Layers
             <Badge size="small" appearance="tint" color="informative">{counts.effectLayers}</Badge>
           </div>
@@ -411,30 +429,19 @@ export function DisposeByTypeTools({ scene }: DisposeByTypeToolsProps) {
         checked={checked.particleSystems}
         onChange={(_, data) => handleCheckboxChange("particleSystems", data.checked as boolean)}
         label={
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={labelRowStyle}>
             Particle Systems
             <Badge size="small" appearance="tint" color="informative">{counts.particleSystems}</Badge>
           </div>
         }
       />
 
-      <Button appearance="primary" onClick={handleDispose} style={{ marginTop: "8px" }}>
+      <Button appearance="primary" onClick={handleDispose} style={{ marginTop: "6px" }}>
         Dispose
       </Button>
 
       {disposalMessage && (
-        <div
-          style={{
-            marginTop: "8px",
-            padding: "8px",
-            backgroundColor: "rgba(0, 120, 212, 0.1)",
-            borderRadius: "4px",
-            fontSize: "12px",
-            color: "#0078d4",
-          }}
-        >
-          {disposalMessage}
-        </div>
+        <MessageBar title="Dispose By Type" message={disposalMessage} intent="info" />
       )}
     </div>
   );

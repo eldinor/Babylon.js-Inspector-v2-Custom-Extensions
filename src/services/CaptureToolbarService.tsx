@@ -135,6 +135,10 @@ export const CaptureToolbarServiceDefinition: ServiceDefinition<
       key: "Capture Toolbar",
       horizontalLocation: "left",
       verticalLocation: "bottom",
+      teachingMoment: {
+        title: "Capture",
+        description: "Capture a screenshot of the current view and then save or discard it from the preview.",
+      },
       component: CaptureButtonContainer,
     });
 

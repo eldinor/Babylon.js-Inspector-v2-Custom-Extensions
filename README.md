@@ -1,278 +1,463 @@
-# Babylon.js Inspector v2 - Custom Extensions Collection
+# Babylon.js Inspector v2 Custom Extensions
 
-A project showcasing custom **ServiceDefinitions** and **ExtensionFeeds** for the Babylon.js Inspector v2, built with React 19, TypeScript, and Vite.
+A collection of custom `ServiceDefinitions` and `ExtensionFeeds` for Babylon.js Inspector v2, built with React, TypeScript, and Vite.
 
-## 🌐 Live Demo
+Live demo:
 
-**[https://inspector.babylonpress.org/](https://inspector.babylonpress.org/)**
+- [https://inspector.babylonpress.org/](https://inspector.babylonpress.org/)
 
-## 📋 Overview
+## Stack
 
-This project demonstrates how to extend the Babylon.js Inspector v2 with custom tools, visualizations, and utilities. It includes several custom services and extensions that enhance the Inspector's functionality for 3D scene development and debugging.
+- Babylon.js `8.54.1`
+- Babylon.js Inspector `8.54.1`
+- React `19`
+- TypeScript
+- Vite
 
-## ✨ Features
+## Getting Started
 
-### Custom ServiceDefinitions
+Prerequisites:
 
-1. **Vertex Tree Map** - Interactive treemap visualization of mesh vertex counts
+- Node.js `18+`
+- npm
 
-   - Side pane visualization using ECharts
-   - Click to select meshes in the Inspector
-   - Real-time updates when meshes are added/removed
-
-2. **Memory Counter** - Real-time JavaScript heap memory usage monitor
-
-   - Bottom toolbar badge display
-   - Updates every 500ms
-   - Shows memory in MB
-
-3. **BabylonPress Logo** - Clickable branding link
-
-   - Bottom toolbar logo display
-   - Links to [BabylonPress.org](https://babylonpress.org/)
-   - Opens in new tab
-
-4. **Info Service** - Documentation panel
-
-   - Lists all custom ServiceDefinitions
-   - Lists all custom ExtensionFeeds
-   - Tooltips with descriptions
-
-5. **Reflection Probes** - Scene Explorer integration for Reflection Probes
-
-   - Adds "Reflection Probes" section to Scene Explorer
-   - Properties pane with four sections:
-     - **Meshes in Probe Renderlist** - View and manage meshes in the probe's renderList
-     - **Add Mesh** - Add available meshes to the renderList (with geometry/PBR material filtering)
-     - **Materials Reflected This Probe** - View materials using the probe's cubeTexture
-     - **Add Material** - Assign probe's cubeTexture to available PBR materials
-   - Add/Remove icons for easy management
-   - Auto-refresh on changes
-   - Smart filtering to prevent conflicts
-
-6. **Capture Toolbar** - Screenshot capture tool
-
-   - Bottom toolbar capture button
-   - Take screenshots of the current scene
-   - Save screenshots to disk
-   - Delete captured screenshots
-   - Preview captured images
-
-### Custom ExtensionFeeds
-
-1. **Graphics Budget** - Performance monitoring and threshold warnings
-
-   - Configurable draw call thresholds (warning/danger)
-   - Settings panel integration
-   - Toolbar indicator with color-coded badges
-   - Real-time draw call counter
-
-2. **Import GLB** - Advanced GLB model management
-
-   - Load GLB files into AssetContainers
-   - Create clones (independent geometry) and instances (shared geometry)
-   - Individual disposal with material preservation
-   - Auto-sync with Scene Explorer
-   - Quick selection of models and derivatives
-   - Auto-select toggle
-   - Batch disposal with "Dispose All"
-
-3. **Dispose By Type [Experimental]** - Batch disposal tool
-
-   - Dispose scene objects by type (lights, meshes, materials, textures, etc.)
-   - Batch selection with checkboxes
-   - Preview before disposal
-   - Organized by object type
-   - Quick cleanup for large scenes
-
-4. **Capture Toolbar** - Screenshot capture extension
-   - Integrated with Capture Toolbar service
-   - Provides screenshot functionality
-   - Save and delete options
-
-## 🛠️ Tech Stack
-
-- **React** 19.2.0
-- **TypeScript** 5.9.3
-- **Vite** 7.1.7
-- **Babylon.js** 8.35.0
-- **Babylon.js Inspector** 8.35.0-preview
-- **Fluent UI** (React Icons & Components)
-- **ECharts** (for React) 3.0.2
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js (v18 or higher recommended)
-- npm or yarn
-
-### Installation
+Install dependencies:
 
 ```bash
-# Clone the repository
-git clone https://github.com/eldinor/Babylon.js-Inspector-v2-Custom-Extensions.git
-
-# Navigate to project directory
-cd Babylon.js-Inspector-v2-Custom-Extensions
-
-# Install dependencies
 npm install
 ```
 
-### Development
+Start development mode:
 
 ```bash
-# Start development server
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173`
-
-### Build
+Build for production:
 
 ```bash
-# Build for production
 npm run build
+```
 
-# Preview production build
+Preview production build:
+
+```bash
 npm run preview
 ```
 
-### Linting
+Run lint:
 
 ```bash
-# Run ESLint
 npm run lint
 ```
 
-## 📁 Project Structure
+## Important Note About Extensions
 
+Custom extension feeds are not active just because they exist in the project.
+
+They must be installed from the Inspector Extensions UI before they appear and become usable.
+
+In this project, that applies to:
+
+- `Graphics Budget`
+- `Import GLB`
+- `Dispose By Type [Experimental]`
+- `Capture Toolbar`
+
+Custom service definitions are registered directly by the app and do not go through the extension-install flow.
+
+## How to Add Extensions to Your Setup
+
+If you are using this project inside Inspector v2, custom extension feeds must be installed from the Extensions UI before they become available.
+
+Steps:
+
+1. Open the Inspector.
+2. Click the `Extensions` button in the top-right toolbar.
+3. Find the extension you want in the list.
+4. Click `Get` to install it.
+5. Wait for the install to complete.
+6. Open the related pane, tool, toolbar item, or settings section.
+
+Extensions in this project that use this flow:
+
+- `Graphics Budget`
+- `Import GLB`
+- `Dispose By Type [Experimental]`
+- `Capture Toolbar`
+
+If an extension does not appear after installation, close and reopen the related Inspector area first, then verify that the extension is listed as installed.
+
+## How to Use These Extensions in Your Copy of Inspector
+
+If you want these extensions in your own Babylon.js Inspector integration, you need to do two things:
+
+1. Register the custom service definitions in your Inspector setup.
+2. Register the custom extension feeds so they appear in the Extensions UI and can be installed.
+
+### 1. Copy the service and extension files
+
+Bring these files into your project:
+
+- `src/services/ServiceList.tsx`
+- `src/services/ExtensionList.tsx`
+- the service files referenced by those registries
+
+At minimum, that includes files such as:
+
+- `InfoService.tsx`
+- `ProbeService.tsx`
+- `VertexTreeMapService.tsx`
+- `MemoryCounterToolbarService.tsx`
+- `graphicsBudgetService.tsx`
+- `ImportGLBService.tsx`
+- `ImportGLB.tsx`
+- `DisposeByTypeService.tsx`
+- `DisposeByType.tsx`
+- `CaptureToolbarService.tsx`
+- `LogoService.tsx`
+
+### 2. Register custom ServiceDefinitions
+
+Where you call `ShowInspector(...)`, include the custom service definitions from `ServiceList.tsx`.
+
+Conceptually:
+
+```ts
+ShowInspector(scene, {
+  serviceDefinitions: [
+    ...serviceList,
+  ],
+});
 ```
-src/
-├── components/
-│   └── Canvas.tsx                      # Main Babylon.js canvas component
-├── services/
-│   ├── ServiceList.tsx                 # Registry of custom ServiceDefinitions
-│   ├── ExtensionList.tsx               # Registry of custom ExtensionFeeds
-│   ├── VertexTreeMapService.tsx        # Vertex treemap visualization
-│   ├── MemoryCounterToolbarService.tsx # Memory usage monitor
-│   ├── LogoService.tsx                 # BabylonPress logo
-│   ├── InfoService.tsx                 # Documentation panel
-│   ├── ProbeService.tsx                # Reflection Probes integration
-│   ├── CaptureToolbarService.tsx       # Screenshot capture service
-│   ├── graphicsBudgetService.tsx       # Graphics budget extension
-│   ├── ImportGLB.tsx                   # GLB import tool component
-│   ├── ImportGLBService.tsx            # GLB import extension
-│   ├── DisposeByType.tsx               # Dispose by type tool component
-│   └── DisposeByTypeService.tsx        # Dispose by type extension
-├── App.tsx
-└── main.tsx
-public/
-└── bplogo.svg                          # BabylonPress logo
+
+This makes direct custom services available immediately in the Inspector.
+
+### 3. Register custom ExtensionFeeds
+
+Also pass the extension feeds from `ExtensionList.tsx` into your Inspector setup.
+
+Conceptually:
+
+```ts
+ShowInspector(scene, {
+  extensionFeeds: [
+    ...extensionList,
+  ],
+});
 ```
 
-## 🎯 Usage Examples
+This makes the extensions discoverable from the Inspector Extensions UI.
 
-### Import GLB Tool
+### 4. Install the extensions from the Inspector UI
 
-1. Click "Load GLB File" to import a model
-2. Click the model name to select it in the Inspector
-3. Use the **Clone** icon (brown) to create independent copies
-4. Use the **Instance** icon (green) to create lightweight instances
-5. Click **Delete** icons to remove individual items
-6. Toggle "Auto-select loaded model" to control selection behavior
-7. Use "Dispose All" to clean up all loaded models
+After the feeds are registered:
 
-### Graphics Budget
+1. Open the Inspector.
+2. Open the `Extensions` button in the top-right toolbar.
+3. Find the extension you want.
+4. Click `Get`.
+5. Wait for the installation to finish.
 
-1. Open Settings panel in the Inspector
-2. Configure draw call warning/danger thresholds
-3. Monitor the toolbar badge for real-time draw call counts
-4. Badge color changes based on thresholds (success/warning/danger)
+Only after installation will those extension-based features appear in the Inspector.
+
+### 5. Verify dependent assets and packages
+
+Your project also needs the same runtime dependencies used by these extensions, especially:
+
+- `@babylonjs/inspector`
+- `@babylonjs/core`
+- `@babylonjs/loaders`
+- `@babylonjs/materials`
+- `@babylonjs/serializers`
+- `@fluentui/react-icons`
+- `echarts-for-react`
+
+If you use the BabylonPress logo entry, also copy:
+
+- `public/bplogo.svg`
+
+### Practical Summary
+
+To use these extensions in your own Inspector copy:
+
+1. Copy the service files.
+2. Import and pass `serviceList` to Inspector setup.
+3. Import and pass `extensionList` to Inspector setup.
+4. Open Inspector and install the extension-feed items from the Extensions UI.
+
+## Where Features Appear
+
+### Right Side Pane
+
+- `Inspector v2 Custom Extensions Info`
+- `Import GLB`
+- `Vertex Tree Map`
+
+### Footer Toolbar
+
+- `Capture Toolbar`
+- `Memory Counter`
+- `Graphics Budget` draw-call indicator
+- `BabylonPress Logo`
+
+### Scene Explorer
+
+- `Reflection Probes`
+
+### Tools
+
+- `Dispose By Type [Experimental]`
+
+### Settings
+
+- `Graphics Budget`
+
+## User Guide
+
+### Inspector v2 Custom Extensions Info
+
+Location:
+
+- Right side pane
+
+Purpose:
+
+- Lists registered custom service definitions and extension feeds
+- Provides quick descriptions for each item
+
+Notes:
+
+- If an item has a real Inspector anchor such as a side-pane tab or toolbar item, its help icon can re-trigger the native Inspector teaching moment
+- Otherwise the help icon falls back to a tooltip
+
+### Import GLB
+
+Location:
+
+- Right side pane
+
+Purpose:
+
+- Import `.glb` files into the scene
+- Create clones and instances
+- Dispose imported entries
+
+Typical workflow:
+
+1. Install the extension from the Inspector Extensions UI.
+2. Open the `Import GLB` pane.
+3. Upload one or more `.glb` files.
+4. Expand an imported entry if needed.
+5. Create a clone or instance.
+6. Remove entries you no longer need.
+
+Notes:
+
+- Imported entries stay in the pane when switching tabs because the pane is kept mounted
+- Clone and instance rows use Inspector-aligned icons and theme colors
 
 ### Vertex Tree Map
 
-1. Open the "Vertex Tree Map" side pane
-2. View interactive treemap of mesh vertex counts
-3. Click on any mesh block to select it in the Inspector
-4. Visualization updates automatically when meshes change
+Location:
+
+- Right side pane
+
+Purpose:
+
+- Visualize mesh vertex cost as a treemap
+- Identify heavy meshes quickly
+
+How to use:
+
+1. Open `Vertex Tree Map`.
+2. Look for the largest blocks.
+3. Click a block to select the matching mesh in the scene.
+
+Best for:
+
+- Geometry budget review
+- Fast hotspot identification
 
 ### Reflection Probes
 
-1. Expand "Reflection Probes" section in Scene Explorer
-2. Click on a probe to view its properties
-3. **Meshes in Probe Renderlist** - View meshes currently rendered by the probe
-   - Click the red delete icon to remove a mesh from the renderList
-4. **Add Mesh** - Add meshes to the probe's renderList
-   - Only shows meshes with geometry or PBR materials
-   - Click the add icon to add a mesh
-5. **Materials Reflected This Probe** - View materials using this probe
-   - Shows bound meshes under each material
-   - Click the red delete icon to remove the probe from a material
-6. **Add Material** - Assign the probe to available materials
-   - Only shows PBR materials not already using this probe
-   - Click the add icon to assign the probe
+Location:
 
-### Dispose By Type
+- Scene Explorer
 
-1. Open the "Dispose By Type [Experimental]" tool
-2. Select object type (Lights, Meshes, Materials, Textures, etc.)
-3. Check items you want to dispose
-4. Click "Dispose Selected" to remove them from the scene
-5. Use for quick cleanup of large scenes
+Purpose:
+
+- Inspect scene reflection probes
+- Manage probe render lists
+- See which materials reflect a probe
+- Add or remove meshes and materials linked to a probe
+
+How to use:
+
+1. Open the `Reflection Probes` section in Scene Explorer.
+2. Select a probe.
+3. Use the Properties area to review meshes, reflected materials, and available additions.
+4. Use the inline add/remove icons to update probe bindings.
+
+Notes:
+
+- Rows were simplified to show entity names more clearly
+- Re-adding a mesh after removal is supported
+
+### Dispose By Type [Experimental]
+
+Location:
+
+- Tools
+
+Purpose:
+
+- Batch-dispose scene objects by category
+
+Typical targets:
+
+- Meshes
+- Lights
+- Materials
+- Textures
+
+Recommended workflow:
+
+1. Install the extension from the Inspector Extensions UI.
+2. Open `Dispose By Type [Experimental]`.
+3. Select only the categories and entries you want to remove.
+4. Dispose in small batches.
+
+Notes:
+
+- This tool changes the scene immediately
+- It is experimental
 
 ### Capture Toolbar
 
-1. Click the "Capture" button in the bottom toolbar
-2. Screenshot is captured and displayed
-3. Click "Save" to download the screenshot
-4. Click "Delete" to discard the screenshot
+Location:
 
-## 🔧 Customization
+- Footer toolbar
 
-### Adding New Services
+Purpose:
 
-1. Create a new service file in `src/services/`
-2. Define a `ServiceDefinition` with:
-   - `friendlyName`: Display name
-   - `consumes`: Array of service identities to consume
-   - `produces`: (Optional) Array of service identities to produce
-   - `factory`: Function that creates the service instance
-3. Add to `ServiceList.tsx`
+- Capture a screenshot of the active view
+- Preview the result
+- Save or delete the captured image
 
-### Adding New Extensions
+How to use:
 
-1. Create extension module in `src/services/`
-2. Define extension metadata in `ExtensionList.tsx`
-3. Add to `extensionList` array
+1. Install the extension from the Inspector Extensions UI.
+2. Click `Capture`.
+3. Review the preview.
+4. Save it or delete it.
 
-## 📚 Documentation
+### Memory Counter
 
-- [Babylon.js Inspector v2 Documentation](https://doc.babylonjs.com/toolsAndResources/inspectorv2)
-- [Babylon.js Documentation](https://doc.babylonjs.com/)
+Location:
 
-## 👤 Author
+- Footer toolbar
 
-**Andrei Stepanov** (labris)
+Purpose:
 
-- Website: [BabylonPress.org](https://babylonpress.org/)
-- GitHub: [@eldinor](https://github.com/eldinor)
+- Show approximate JavaScript heap usage
 
-## 🙏 Acknowledgments
+Notes:
 
-- Graphics Budget extension originally by **Ryan Tremblay** (ryantrem)
-- Built with [Babylon.js](https://www.babylonjs.com/)
-- UI components from [Fluent UI](https://react.fluentui.dev/)
+- The reading depends on browser support
+- If memory APIs are unavailable, the indicator falls back to an unavailable state
 
-## 📝 License
+### Graphics Budget
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details. Feel free to use.
+Locations:
 
-Copyright 2025 Andrei Stepanov
+- Footer toolbar
+- Settings
 
-## 🐛 Issues
+Purpose:
 
-Report Custom Extensions issues at: [GitHub Custom Extensions Issues](https://github.com/eldinor/Babylon.js-Inspector-v2-Custom-Extensions/issues)
+- Show current draw calls in the footer
+- Warn when thresholds are exceeded
 
-Report Inspector v2 issues at: [Babylon.js GitHub Inspector v2](https://github.com/BabylonJS/Babylon.js/issues/17293)
+Indicator behavior:
+
+- Green: below warning threshold
+- Yellow: above warning threshold
+- Red: above danger threshold
+
+Configuration:
+
+1. Install the extension from the Inspector Extensions UI.
+2. Open Settings.
+3. Find `Graphics Budget`.
+4. Set `Draw Call Warning` and `Draw Call Danger`.
+
+### BabylonPress Logo
+
+Location:
+
+- Footer toolbar
+
+Purpose:
+
+- Quick link to BabylonPress resources
+
+## Teaching Moments and Tooltips
+
+Native Inspector teaching moments are available for:
+
+- Toolbar items
+- Side-pane tabs
+
+That means native anchored teaching moments work for:
+
+- `Import GLB`
+- `Info`
+- `Vertex Tree Map`
+- `Capture Toolbar`
+- `Memory Counter`
+- `Graphics Budget`
+- `BabylonPress Logo`
+
+Scene Explorer sections and Tools do not currently expose the same native teaching-moment registration path in this project, so they use standard descriptions instead.
+
+## Project Structure
+
+```text
+src/
+  components/
+    Canvas.tsx
+  services/
+    ServiceList.tsx
+    ExtensionList.tsx
+    InfoService.tsx
+    ProbeService.tsx
+    VertexTreeMapService.tsx
+    MemoryCounterToolbarService.tsx
+    graphicsBudgetService.tsx
+    ImportGLB.tsx
+    ImportGLBService.tsx
+    DisposeByType.tsx
+    DisposeByTypeService.tsx
+    CaptureToolbarService.tsx
+    LogoService.tsx
+public/
+  bplogo.svg
+```
+
+## Author
+
+Andrei Stepanov (`labris`)
+
+- [https://babylonpress.org/](https://babylonpress.org/)
+- [https://github.com/eldinor](https://github.com/eldinor)
+
+## Links
+
+- Babylon.js Inspector v2 docs: [https://doc.babylonjs.com/toolsAndResources/inspectorv2](https://doc.babylonjs.com/toolsAndResources/inspectorv2)
+- Babylon.js docs: [https://doc.babylonjs.com/](https://doc.babylonjs.com/)
+- Project issues: [https://github.com/eldinor/Babylon.js-Inspector-v2-Custom-Extensions/issues](https://github.com/eldinor/Babylon.js-Inspector-v2-Custom-Extensions/issues)
+
+## License
+
+Apache License 2.0. See [LICENSE](LICENSE).
