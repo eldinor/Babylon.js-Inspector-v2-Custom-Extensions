@@ -3,6 +3,7 @@ import type { Material } from "@babylonjs/core/Materials/material";
 import type { PBRMaterial } from "@babylonjs/core/Materials/PBR/pbrMaterial";
 import type { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
+import { useMemo, useState } from "react";
 import {
   ServiceDefinition,
   ISceneExplorerService,
@@ -13,7 +14,12 @@ import {
   PropertiesServiceIdentity,
   ISelectionService,
   SelectionServiceIdentity,
+  Button,
+  LineContainer,
+  Link,
   LinkToEntityPropertyLine,
+  MessageBar,
+  SearchBar,
 } from "@babylonjs/inspector";
 import { CubeRegular, Delete16Regular, Add16Regular } from "@fluentui/react-icons";
 
@@ -32,6 +38,66 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
   // This factory function creates the instance of the service.
   // It is effectively called when ShowInspector is called.
   factory: (sceneExplorerService, sceneContext, propertiesService, selectionService) => {
+    const refreshSelection = () => {
+      const currentEntity = selectionService.selectedEntity;
+      selectionService.selectedEntity = null;
+      setTimeout(() => {
+        selectionService.selectedEntity = currentEntity;
+      }, 0);
+    };
+
+    const ProbeMissingMessage = () => (
+      <MessageBar title="Reflection Probe" message="Probe not found." intent="warning" />
+    );
+
+    const EmptyState = ({ message }: { message: string }) => (
+      <MessageBar title="Reflection Probe" message={message} intent="info" />
+    );
+
+    const EntityActionRow = ({
+      label,
+      entity,
+      actionLabel,
+      actionIcon,
+      onAction,
+      children,
+    }: {
+      label?: string;
+      entity: AbstractMesh | Material;
+      actionLabel: string;
+      actionIcon: typeof Delete16Regular;
+      onAction: () => void;
+      children?: React.ReactNode;
+    }) => (
+      <LineContainer
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "4px",
+          padding: "4px 0",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {label ? (
+              <LinkToEntityPropertyLine label={label} entity={entity} selectionService={selectionService} />
+            ) : (
+              <Link
+                value={entity.name || "Unnamed"}
+                onLink={() => {
+                  selectionService.selectedEntity = entity;
+                }}
+              />
+            )}
+          </div>
+          <div title={actionLabel} style={{ flexShrink: 0 }}>
+            <Button appearance="transparent" icon={actionIcon} onClick={onAction} />
+          </div>
+        </div>
+        {children}
+      </LineContainer>
+    );
+
     // Store wrapped probe entities to maintain reference equality
     const wrappedProbes: unknown[] = [];
     // Map to store the original probe for each wrapped entity
@@ -93,7 +159,7 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
             // Get the original probe from the map
             const probe = probeMap.get(context as object);
             if (!probe) {
-              return <div style={{ padding: "4px 8px", opacity: 0.6 }}>Probe not found</div>;
+              return <ProbeMissingMessage />;
             }
 
             const renderList = probe.renderList || [];
@@ -103,38 +169,27 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
                 const index = probe.renderList.indexOf(meshToRemove);
                 if (index > -1) {
                   probe.renderList.splice(index, 1);
-                  // Force a re-render by re-selecting the current entity
-                  const currentEntity = selectionService.selectedEntity;
-                  selectionService.selectedEntity = null;
-                  // Use setTimeout to ensure the deselection is processed first
-                  setTimeout(() => {
-                    selectionService.selectedEntity = currentEntity;
-                  }, 0);
+                  refreshSelection();
                 }
               }
             };
 
+            if (renderList.length === 0) {
+              return <EmptyState message="No meshes in the render list." />;
+            }
+
             return (
               <>
-                {renderList.length === 0 ? (
-                  <div style={{ padding: "4px 8px", opacity: 0.6 }}>No meshes in render list</div>
-                ) : (
-                  renderList.map((mesh, index) => (
-                    <div key={index} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      <div style={{ flex: 1 }}>
-                        <LinkToEntityPropertyLine
-                          label={mesh.name || `Mesh ${index}`}
-                          entity={mesh}
-                          selectionService={selectionService}
-                        />
-                      </div>
-                      <Delete16Regular
-                        onClick={() => handleRemoveMesh(mesh)}
-                        style={{ cursor: "pointer", color: "#d13438", flexShrink: 0 }}
-                      />
-                    </div>
-                  ))
-                )}
+                {renderList.map((mesh, index) => (
+                  <EntityActionRow
+                    key={mesh.uniqueId ?? index}
+                    label={undefined}
+                    entity={mesh}
+                    actionLabel="Remove mesh"
+                    actionIcon={Delete16Regular}
+                    onAction={() => handleRemoveMesh(mesh)}
+                  />
+                ))}
               </>
             );
           },
@@ -142,87 +197,68 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
         {
           section: "Add Mesh",
           component: ({ context }) => {
+            const [query, setQuery] = useState("");
             // Get the original probe from the map
             const probe = probeMap.get(context as object);
             if (!probe) {
-              return <div style={{ padding: "4px 8px", opacity: 0.6 }}>Probe not found</div>;
+              return <ProbeMissingMessage />;
             }
 
             const scene = sceneContext.currentScene;
             const renderList = probe.renderList || [];
 
-            // Get materials from the Materials section (those using this probe)
-            const materialsUsingProbe = scene ? scene.materials.filter((material: Material) => {
-              const mat = material as PBRMaterial | StandardMaterial;
-              return mat.reflectionTexture === probe.cubeTexture;
-            }) : [];
-
-            // Collect all meshes bound to materials in the Materials section
-            const meshesBoundToMaterials = new Set<AbstractMesh>();
-            materialsUsingProbe.forEach((material) => {
-              const mat = material as PBRMaterial | StandardMaterial;
-              const boundMeshes = mat.getBindedMeshes ? mat.getBindedMeshes() : [];
-              boundMeshes.forEach((mesh) => meshesBoundToMaterials.add(mesh));
-            });
-
-            // Find all meshes that are NOT in renderList and NOT bound to materials in Materials section
-            const availableMeshes = scene ? scene.meshes.filter((mesh) => {
-              // Skip if already in renderList
-              if (renderList.includes(mesh)) {
-                return false;
+            // Find all meshes that are not already in the renderList.
+            const availableMeshes = useMemo(() => {
+              if (!scene) {
+                return [];
               }
 
-              // Skip if bound to a material in the Materials section
-              if (meshesBoundToMaterials.has(mesh)) {
-                return false;
-              }
+              return scene.meshes.filter((mesh) => {
+                if (renderList.includes(mesh)) {
+                  return false;
+                }
 
-              // Only include meshes that have geometry OR have a PBR material
-              const hasGeometry = mesh.geometry !== null && mesh.geometry !== undefined;
-              const hasPBRMaterial = mesh.material && mesh.material.getClassName() === "PBRMaterial";
+                const hasGeometry = mesh.geometry !== null && mesh.geometry !== undefined;
+                const hasPBRMaterial = mesh.material && mesh.material.getClassName() === "PBRMaterial";
 
-              if (!hasGeometry && !hasPBRMaterial) {
-                return false;
-              }
+                if (!hasGeometry && !hasPBRMaterial) {
+                  return false;
+                }
 
-              return true;
-            }) : [];
+                if (!query.trim()) {
+                  return true;
+                }
+
+                return (mesh.name || "").toLowerCase().includes(query.trim().toLowerCase());
+              });
+            }, [query, renderList, scene]);
 
             const handleAddMesh = (mesh: AbstractMesh) => {
               if (!probe.renderList) {
                 probe.renderList = [];
               }
               probe.renderList.push(mesh);
-              // Force a re-render by re-selecting the current entity
-              const currentEntity = selectionService.selectedEntity;
-              selectionService.selectedEntity = null;
-              setTimeout(() => {
-                selectionService.selectedEntity = currentEntity;
-              }, 0);
+              refreshSelection();
             };
 
             return (
-              <>
+              <LineContainer style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <SearchBar onChange={setQuery} placeholder="Filter meshes" />
                 {availableMeshes.length === 0 ? (
-                  <div style={{ padding: "4px 8px", opacity: 0.6 }}>No available meshes to add</div>
+                  <EmptyState message="No available meshes to add." />
                 ) : (
                   availableMeshes.map((mesh, index) => (
-                    <div key={index} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      <div style={{ flex: 1 }}>
-                        <LinkToEntityPropertyLine
-                          label={mesh.name || `Mesh ${index}`}
-                          entity={mesh}
-                          selectionService={selectionService}
-                        />
-                      </div>
-                      <Add16Regular
-                        onClick={() => handleAddMesh(mesh)}
-                        style={{ cursor: "pointer", color: "#13a10e", flexShrink: 0 }}
-                      />
-                    </div>
+                    <EntityActionRow
+                      key={mesh.uniqueId ?? index}
+                      label={undefined}
+                      entity={mesh}
+                      actionLabel="Add mesh"
+                      actionIcon={Add16Regular}
+                      onAction={() => handleAddMesh(mesh)}
+                    />
                   ))
                 )}
-              </>
+              </LineContainer>
             );
           },
         },
@@ -232,7 +268,7 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
             // Get the original probe from the map
             const probe = probeMap.get(context as object);
             if (!probe) {
-              return <div style={{ padding: "4px 8px", opacity: 0.6 }}>Probe not found</div>;
+              return <ProbeMissingMessage />;
             }
 
             const scene = sceneContext.currentScene;
@@ -248,56 +284,45 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
               const mat = material as PBRMaterial | StandardMaterial;
               if (mat.reflectionTexture) {
                 mat.reflectionTexture = null;
-                // Force a re-render by re-selecting the current entity
-                const currentEntity = selectionService.selectedEntity;
-                selectionService.selectedEntity = null;
-                setTimeout(() => {
-                  selectionService.selectedEntity = currentEntity;
-                }, 0);
+                refreshSelection();
               }
             };
 
+            if (materialsUsingProbe.length === 0) {
+              return <EmptyState message="No materials use this probe." />;
+            }
+
             return (
               <>
-                {materialsUsingProbe.length === 0 ? (
-                  <div style={{ padding: "4px 8px", opacity: 0.6 }}>No materials using this probe</div>
-                ) : (
-                  materialsUsingProbe.map((material, index) => {
-                    const mat = material as PBRMaterial | StandardMaterial;
-                    const boundMeshes = mat.getBindedMeshes ? mat.getBindedMeshes() : [];
+                {materialsUsingProbe.map((material, index) => {
+                  const mat = material as PBRMaterial | StandardMaterial;
+                  const boundMeshes = mat.getBindedMeshes ? mat.getBindedMeshes() : [];
 
-                    return (
-                      <div key={index} style={{ marginBottom: "8px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          <div style={{ flex: 1 }}>
-                            <LinkToEntityPropertyLine
-                              label={material.name || `Material ${index}`}
-                              entity={material}
-                              selectionService={selectionService}
+                  return (
+                    <EntityActionRow
+                      key={material.uniqueId ?? index}
+                      label="Material"
+                      entity={material}
+                      actionLabel="Remove material"
+                      actionIcon={Delete16Regular}
+                      onAction={() => handleRemoveMaterial(material)}
+                    >
+                      {boundMeshes.length > 0 ? (
+                        <LineContainer style={{ marginLeft: "16px" }}>
+                          {boundMeshes.map((mesh, meshIndex) => (
+                            <Link
+                              key={mesh.uniqueId ?? meshIndex}
+                              value={mesh.name || `Mesh ${meshIndex}`}
+                              onLink={() => {
+                                selectionService.selectedEntity = mesh;
+                              }}
                             />
-                          </div>
-                          <Delete16Regular
-                            onClick={() => handleRemoveMaterial(material)}
-                            style={{ cursor: "pointer", color: "#d13438", flexShrink: 0 }}
-                          />
-                        </div>
-                        {boundMeshes.length > 0 && (
-                          <div style={{ marginLeft: "16px", marginTop: "4px" }}>
-                            {boundMeshes.map((mesh, meshIndex) => (
-                              <div key={meshIndex} style={{ fontSize: "11px", opacity: 0.8 }}>
-                                <LinkToEntityPropertyLine
-                                  label={mesh.name || `Mesh ${meshIndex}`}
-                                  entity={mesh}
-                                  selectionService={selectionService}
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
+                          ))}
+                        </LineContainer>
+                      ) : null}
+                    </EntityActionRow>
+                  );
+                })}
               </>
             );
           },
@@ -305,10 +330,11 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
         {
           section: "Add Material",
           component: ({ context }) => {
+            const [query, setQuery] = useState("");
             // Get the original probe from the map
             const probe = probeMap.get(context as object);
             if (!probe) {
-              return <div style={{ padding: "4px 8px", opacity: 0.6 }}>Probe not found</div>;
+              return <ProbeMissingMessage />;
             }
 
             const scene = sceneContext.currentScene;
@@ -323,80 +349,80 @@ export const ReflectionProbesServiceDefinition: ServiceDefinition<
             });
 
             // Find all PBR materials that are NOT using this probe and are NOT "default material"
-            const availableMaterials = scene ? scene.materials.filter((material: Material) => {
-              // Skip non-PBR materials
-              if (material.getClassName() !== "PBRMaterial") {
-                return false;
+            const availableMaterials = useMemo(() => {
+              if (!scene) {
+                return [];
               }
 
-              // Skip default material
-              if (material.name === "default material") {
-                return false;
-              }
+              return scene.materials.filter((material: Material) => {
+                if (material.getClassName() !== "PBRMaterial") {
+                  return false;
+                }
 
-              // Skip materials that are bound to meshes in the renderList
-              if (renderListMaterials.has(material)) {
-                return false;
-              }
+                if (material.name === "default material") {
+                  return false;
+                }
 
-              const mat = material as PBRMaterial;
-              // Only show materials that don't already have this probe's cubeTexture
-              return mat.reflectionTexture !== probe.cubeTexture;
-            }) : [];
+                if (renderListMaterials.has(material)) {
+                  return false;
+                }
+
+                const mat = material as PBRMaterial;
+                if (mat.reflectionTexture === probe.cubeTexture) {
+                  return false;
+                }
+
+                if (!query.trim()) {
+                  return true;
+                }
+
+                return (material.name || "").toLowerCase().includes(query.trim().toLowerCase());
+              });
+            }, [probe.cubeTexture, query, renderListMaterials, scene]);
 
             const handleAddMaterial = (material: Material) => {
               const mat = material as PBRMaterial;
               mat.reflectionTexture = probe.cubeTexture;
-              // Force a re-render by re-selecting the current entity
-              const currentEntity = selectionService.selectedEntity;
-              selectionService.selectedEntity = null;
-              setTimeout(() => {
-                selectionService.selectedEntity = currentEntity;
-              }, 0);
+              refreshSelection();
             };
 
             return (
-              <>
+              <LineContainer style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <SearchBar onChange={setQuery} placeholder="Filter materials" />
                 {availableMaterials.length === 0 ? (
-                  <div style={{ padding: "4px 8px", opacity: 0.6 }}>No available materials to add</div>
+                  <EmptyState message="No available materials to add." />
                 ) : (
                   availableMaterials.map((material, index) => {
                     const mat = material as PBRMaterial;
                     const boundMeshes = mat.getBindedMeshes ? mat.getBindedMeshes() : [];
 
                     return (
-                      <div key={index} style={{ marginBottom: "8px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          <div style={{ flex: 1 }}>
-                            <LinkToEntityPropertyLine
-                              label={material.name || `Material ${index}`}
-                              entity={material}
-                              selectionService={selectionService}
-                            />
-                          </div>
-                          <Add16Regular
-                            onClick={() => handleAddMaterial(material)}
-                            style={{ cursor: "pointer", color: "#13a10e", flexShrink: 0 }}
-                          />
-                        </div>
-                        {boundMeshes.length > 0 && (
-                          <div style={{ marginLeft: "16px", marginTop: "4px" }}>
+                      <EntityActionRow
+                        key={material.uniqueId ?? index}
+                        label={undefined}
+                        entity={material}
+                        actionLabel="Add material"
+                        actionIcon={Add16Regular}
+                        onAction={() => handleAddMaterial(material)}
+                      >
+                        {boundMeshes.length > 0 ? (
+                          <LineContainer style={{ marginLeft: "16px" }}>
                             {boundMeshes.map((mesh, meshIndex) => (
-                              <div key={meshIndex} style={{ fontSize: "11px", opacity: 0.8 }}>
-                                <LinkToEntityPropertyLine
-                                  label={mesh.name || `Mesh ${meshIndex}`}
-                                  entity={mesh}
-                                  selectionService={selectionService}
-                                />
-                              </div>
+                              <Link
+                                key={mesh.uniqueId ?? meshIndex}
+                                value={mesh.name || `Mesh ${meshIndex}`}
+                                onLink={() => {
+                                  selectionService.selectedEntity = mesh;
+                                }}
+                              />
                             ))}
-                          </div>
-                        )}
-                      </div>
+                          </LineContainer>
+                        ) : null}
+                      </EntityActionRow>
                     );
                   })
                 )}
-              </>
+              </LineContainer>
             );
           },
         },

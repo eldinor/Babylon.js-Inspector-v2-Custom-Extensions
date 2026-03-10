@@ -104,6 +104,7 @@ export function Canvas() {
       const skybox = scene.createDefaultSkybox(hdrTexture, true, 10000, 0.5);
 
       const probe = new ReflectionProbe("main", 512, scene);
+      probe.metadata = {"About": "This is testing Reflection Probe!"}
       probe.renderList!.push(box);
       probe.renderList!.push(skybox as Mesh);
 
